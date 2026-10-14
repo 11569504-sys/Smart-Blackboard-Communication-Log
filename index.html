@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>智慧黑板聯絡簿</title>
+
+<style>
+
+/* =========================================
+   基本設定
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+}
+
+body {
+
+    font-family:
+        "DFKai-SB",
+        "標楷體",
+        "BiauKai",
+        serif;
+
+    background: #eeeeea;
+
+    color: #222;
+
+    overflow-x: hidden;
+}
+
+
+/* =========================================
+   上方工具列
+========================================= */
+
+.topbar {
+
+    height: 78px;
+
+    background: #263238;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 25px;
+
+    position: relative;
+
+    z-index: 100;
+
+    font-family:
+        "Microsoft JhengHei",
+        sans-serif;
+}
+
+.logo {
+
+    font-size: 28px;
+
+    font-weight: bold;
+}
+
+.top-buttons {
+
+    display: flex;
+
+    gap: 10px;
+}
+
+button {
+
+    border: none;
+
+    border-radius: 10px;
+
+    padding: 11px 18px;
+
+    font-size: 17px;
+
+    font-family:
+        "Microsoft JhengHei",
+        sans-serif;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.edit-button {
+
+    background: #42a5f5;
+
+    color: white;
+}
+
+.fullscreen-button {
+
+    background: #66bb6a;
+
+    color: white;
+}
+
+
+/* =========================================
+   白板區域
+========================================= */
+
+.board-area {
+
+    width: 100%;
+
+    height:
+        calc(100vh - 78px);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+}
+
+
+/* =========================================
+   真正的中文直書
+
+   vertical-rl：
+   上 → 下
+   右 → 左
+========================================= */
+
+.vertical-board {
+
+    width: 100%;
+
+    height: 100%;
+
+    background: #fffdf5;
+
+    border:
+        8px solid #455a64;
+
+    border-radius: 15px;
+
+    padding: 25px;
+
+    display: flex;
+
+    flex-direction: row;
+
+    direction: rtl;
+
+    gap: 35px;
+
+    overflow-x: auto;
+
+    overflow-y: hidden;
+}
+
+
+/* =========================================
+   每一個直書欄
+========================================= */
+
+.vertical-column {
+
+    height: 100%;
+
+    writing-mode: vertical-rl;
+
+    text-orientation: upright;
+
+    direction: ltr;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================
+   日期
+
+   不顯示年份
+========================================= */
+
+.date-column {
+
+    min-width: 125px;
+
+    border-left:
+        2px solid #b0bec5;
+
+    padding-left: 20px;
+
+    font-size: 34px;
+
+    font-weight: bold;
+
+    color: #37474f;
+
+    letter-spacing: 4px;
+}
+
+.date-text {
+
+    white-space: nowrap;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================
+   今日作業
+========================================= */
+
+.homework-column {
+
+    min-width: 430px;
+
+    border-left:
+        3px solid #66bb6a;
+
+    padding-left: 25px;
+}
+
+
+/* 標題 */
+
+.section-title {
+
+    font-size: 43px;
+
+    font-weight: bold;
+
+    color: #2e7d32;
+
+    margin-left: 20px;
+
+    white-space: nowrap;
+}
+
+
+/* 作業內容 */
+
+.homework-content {
+
+    margin-left: 35px;
+
+    font-size: 36px;
+
+    line-height: 2.1;
+
+    white-space: pre-wrap;
+
+    font-weight: normal;
+}
+
+
+/* =========================================
+   老師公告
+
+   注意：
+   因為整體 direction: rtl，
+   它會自然排在最左邊。
+========================================= */
+
+.notice-column {
+
+    min-width: 430px;
+
+    border-left:
+        3px solid #ff9800;
+
+    padding-left: 25px;
+}
+
+
+.notice-column .section-title {
+
+    color: #ef6c00;
+}
+
+
+.notice-content {
+
+    margin-left: 35px;
+
+    font-size: 36px;
+
+    line-height: 2.1;
+
+    white-space: pre-wrap;
+
+    font-weight: normal;
+}
+
+
+/* =========================================
+   編輯視窗
+========================================= */
+
+.editor {
+
+    display: none;
+
+    position: fixed;
+
+    z-index: 500;
+
+    left: 50%;
+
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    width:
+        min(800px, 90vw);
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: white;
+
+    border-radius: 20px;
+
+    padding: 30px;
+
+    box-shadow:
+        0 20px 60px
+        rgba(0,0,0,.4);
+
+    font-family:
+        "Microsoft JhengHei",
+        sans-serif;
+}
+
+.editor.show {
+
+    display: block;
+}
+
+.editor h2 {
+
+    margin-top: 0;
+
+    color: #1565c0;
+
+    font-size: 30px;
+}
+
+label {
+
+    display: block;
+
+    margin-top: 20px;
+
+    margin-bottom: 8px;
+
+    font-weight: bold;
+
+    font-size: 19px;
+}
+
+textarea {
+
+    width: 100%;
+
+    min-height: 160px;
+
+    resize: vertical;
+
+    border:
+        2px solid #cfd8dc;
+
+    border-radius: 12px;
+
+    padding: 15px;
+
+    font-family:
+        "DFKai-SB",
+        "標楷體",
+        "BiauKai",
+        serif;
+
+    font-size: 20px;
+
+    line-height: 1.7;
+
+    outline: none;
+}
+
+textarea:focus {
+
+    border-color: #42a5f5;
+}
+
+.editor-buttons {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    margin-top: 20px;
+}
+
+.save-button {
+
+    background: #43a047;
+
+    color: white;
+}
+
+.cancel-button {
+
+    background: #757575;
+
+    color: white;
+}
+
+
+/* =========================================
+   遮罩
+========================================= */
+
+.overlay {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 400;
+
+    background:
+        rgba(0,0,0,.55);
+}
+
+.overlay.show {
+
+    display: block;
+}
+
+
+/* =========================================
+   全螢幕
+========================================= */
+
+body.fullscreen .topbar {
+
+    display: none;
+}
+
+body.fullscreen .board-area {
+
+    height: 100vh;
+
+    padding: 15px;
+}
+
+body.fullscreen .vertical-board {
+
+    border: none;
+
+    border-radius: 0;
+
+    height: 100%;
+
+    padding: 30px;
+
+    background: #fffdf5;
+}
+
+
+/* =========================================
+   全螢幕放大
+========================================= */
+
+body.fullscreen .date-column {
+
+    font-size: 45px;
+
+    min-width: 160px;
+}
+
+body.fullscreen .homework-column,
+body.fullscreen .notice-column {
+
+    min-width: 500px;
+}
+
+body.fullscreen .section-title {
+
+    font-size: 58px;
+}
+
+body.fullscreen .homework-content,
+body.fullscreen .notice-content {
+
+    font-size: 47px;
+
+    line-height: 2.15;
+}
+
+
+/* =========================================
+   平板
+========================================= */
+
+@media (max-width: 1000px) {
+
+    .logo {
+
+        font-size: 22px;
+    }
+
+    .topbar {
+
+        height: 70px;
+    }
+
+    .board-area {
+
+        height:
+            calc(100vh - 70px);
+
+        padding: 12px;
+    }
+
+    .vertical-board {
+
+        padding: 20px;
+
+        gap: 25px;
+    }
+
+    .date-column {
+
+        font-size: 28px;
+
+        min-width: 105px;
+    }
+
+    .homework-column,
+    .notice-column {
+
+        min-width: 330px;
+    }
+
+    .section-title {
+
+        font-size: 36px;
+    }
+
+    .homework-content,
+    .notice-content {
+
+        font-size: 29px;
+    }
+}
+
+
+/* =========================================
+   手機
+========================================= */
+
+@media (max-width: 600px) {
+
+    .logo {
+
+        font-size: 18px;
+    }
+
+    .top-buttons button {
+
+        padding: 8px 10px;
+
+        font-size: 14px;
+    }
+
+    .board-area {
+
+        padding: 8px;
+    }
+
+    .vertical-board {
+
+        padding: 15px;
+
+        gap: 18px;
+    }
+
+    .date-column {
+
+        font-size: 23px;
+
+        min-width: 85px;
+    }
+
+    .homework-column,
+    .notice-column {
+
+        min-width: 250px;
+    }
+
+    .section-title {
+
+        font-size: 29px;
+    }
+
+    .homework-content,
+    .notice-content {
+
+        font-size: 24px;
+    }
+}
+
+
+/* =========================================
+   滾動條
+========================================= */
+
+.vertical-board::-webkit-scrollbar {
+
+    height: 8px;
+}
+
+.vertical-board::-webkit-scrollbar-thumb {
+
+    background: #90a4ae;
+
+    border-radius: 10px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     工具列
+========================================= -->
+
+<header class="topbar">
+
+    <div class="logo">
+        📚 智慧黑板聯絡簿
+    </div>
+
+    <div class="top-buttons">
+
+        <button
+            class="edit-button"
+            onclick="openEditor()">
+
+            ✏️ 編輯
+
+        </button>
+
+        <button
+            class="fullscreen-button"
+            onclick="goFullscreen()">
+
+            🖥️ 全螢幕
+
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<!-- =========================================
+     直式聯絡簿
+========================================= -->
+
+<main class="board-area">
+
+    <div class="vertical-board">
+
+
+        <!-- =====================================
+             最右邊：日期
+        ====================================== -->
+
+        <section
+            class="vertical-column date-column">
+
+            <div
+                class="date-text"
+                id="dateText">
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             今日作業
+        ====================================== -->
+
+        <section
+            class="vertical-column homework-column">
+
+            <div class="section-title">
+
+                📝今日作業
+
+            </div>
+
+            <div
+                class="homework-content"
+                id="homeworkDisplay">
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             最左邊：老師公告
+        ====================================== -->
+
+        <section
+            class="vertical-column notice-column">
+
+            <div class="section-title">
+
+                📢老師公告
+
+            </div>
+
+            <div
+                class="notice-content"
+                id="noticeDisplay">
+
+            </div>
+
+        </section>
+
+
+    </div>
+
+</main>
+
+
+
+<!-- =========================================
+     遮罩
+========================================= -->
+
+<div
+    class="overlay"
+    id="overlay"
+    onclick="closeEditor()">
+</div>
+
+
+
+<!-- =========================================
+     編輯視窗
+========================================= -->
+
+<section
+    class="editor"
+    id="editor">
+
+    <h2>
+        ✏️ 編輯聯絡簿
+    </h2>
+
+
+    <label>
+        📢 老師公告
+    </label>
+
+    <textarea
+        id="noticeInput"
+        placeholder="例如：抄完聯絡簿請閱讀">
+    </textarea>
+
+
+    <label>
+        📝 今日作業
+    </label>
+
+    <textarea
+        id="homeworkInput"
+        placeholder="每一行一項作業，例如：
+國語習作第20頁
+數學習作第15頁
+完成閱讀學習單">
+    </textarea>
+
+
+    <div class="editor-buttons">
+
+        <button
+            class="save-button"
+            onclick="saveData()">
+
+            💾 儲存
+
+        </button>
+
+
+        <button
+            class="cancel-button"
+            onclick="closeEditor()">
+
+            取消
+
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<script>
+
+/* =========================================
+   預設資料
+========================================= */
+
+const defaultData = {
+
+    notice:
+        "抄完聯絡簿請閱讀",
+
+    homework:
+        "國語習作第20頁\n" +
+        "數學習作第15頁\n" +
+        "完成閱讀學習單"
+
+};
+
+
+/* =========================================
+   取得資料
+========================================= */
+
+function getData() {
+
+    const saved =
+        localStorage.getItem(
+            "smartContactBook"
+        );
+
+    if (!saved) {
+
+        return defaultData;
+
+    }
+
+    try {
+
+        return JSON.parse(saved);
+
+    } catch {
+
+        return defaultData;
+
+    }
+
+}
+
+
+/* =========================================
+   日期
+   不顯示年份
+========================================= */
+
+function updateDate() {
+
+    const now = new Date();
+
+    const month =
+        now.getMonth() + 1;
+
+    const day =
+        now.getDate();
+
+    const weekday = [
+
+        "日",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六"
+
+    ][now.getDay()];
+
+
+    /*
+       不顯示年份：
+
+       10月5日星期一
+
+       因為使用 vertical-rl，
+       會自動變成真正直書。
+    */
+
+    document.getElementById(
+        "dateText"
+    ).textContent =
+
+        `${month}月${day}日星期${weekday}`;
+
+}
+
+
+/* =========================================
+   把作業自動加上：
+
+   一、
+   二、
+   三、
+========================================= */
+
+function formatHomework(text) {
+
+    if (!text.trim()) {
+
+        return "今天沒有作業";
+
+    }
+
+
+    const lines =
+        text
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line !== "");
+
+
+    const chineseNumbers = [
+
+        "一、",
+        "二、",
+        "三、",
+        "四、",
+        "五、",
+        "六、",
+        "七、",
+        "八、",
+        "九、",
+        "十、"
+
+    ];
+
+
+    return lines
+        .map(
+            (line, index) => {
+
+                /*
+                   如果老師自己已經輸入
+                   一、二、三、就不要重複。
+                */
+
+                const alreadyNumbered =
+                    /^[一二三四五六七八九十]+、/.test(line);
+
+
+                if (alreadyNumbered) {
+
+                    return line;
+
+                }
+
+
+                const number =
+                    chineseNumbers[index]
+                    || `${index + 1}、`;
+
+
+                return number + line;
+
+            }
+        )
+        .join("\n");
+
+}
+
+
+/* =========================================
+   顯示資料
+========================================= */
+
+function displayData() {
+
+    const data =
+        getData();
+
+
+    document.getElementById(
+        "noticeDisplay"
+    ).textContent =
+        data.notice;
+
+
+    document.getElementById(
+        "homeworkDisplay"
+    ).textContent =
+        formatHomework(
+            data.homework
+        );
+
+}
+
+
+/* =========================================
+   開啟編輯
+========================================= */
+
+function openEditor() {
+
+    const data =
+        getData();
+
+
+    document.getElementById(
+        "noticeInput"
+    ).value =
+        data.notice;
+
+
+    document.getElementById(
+        "homeworkInput"
+    ).value =
+        data.homework;
+
+
+    document.getElementById(
+        "editor"
+    ).classList.add(
+        "show"
+    );
+
+
+    document.getElementById(
+        "overlay"
+    ).classList.add(
+        "show"
+    );
+
+}
+
+
+/* =========================================
+   關閉編輯
+========================================= */
+
+function closeEditor() {
+
+    document.getElementById(
+        "editor"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.getElementById(
+        "overlay"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================================
+   儲存
+========================================= */
+
+function saveData() {
+
+    const notice =
+        document.getElementById(
+            "noticeInput"
+        ).value.trim();
+
+
+    const homework =
+        document.getElementById(
+            "homeworkInput"
+        ).value.trim();
+
+
+    const data = {
+
+        notice:
+            notice ||
+            "抄完聯絡簿請閱讀",
+
+        homework:
+            homework ||
+            "今天沒有作業"
+
+    };
+
+
+    localStorage.setItem(
+
+        "smartContactBook",
+
+        JSON.stringify(data)
+
+    );
+
+
+    displayData();
+
+    closeEditor();
+
+}
+
+
+/* =========================================
+   全螢幕
+========================================= */
+
+async function goFullscreen() {
+
+    document.body.classList.add(
+        "fullscreen"
+    );
+
+
+    try {
+
+        if (
+            !document.fullscreenElement
+        ) {
+
+            await document
+                .documentElement
+                .requestFullscreen();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "無法啟用全螢幕",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   離開全螢幕
+========================================= */
+
+function leaveFullscreen() {
+
+    document.body.classList.remove(
+        "fullscreen"
+    );
+
+
+    if (
+        document.fullscreenElement
+    ) {
+
+        document.exitFullscreen();
+
+    }
+
+}
+
+
+/* =========================================
+   ESC
+========================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            leaveFullscreen();
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   瀏覽器全螢幕狀態
+========================================= */
+
+document.addEventListener(
+    "fullscreenchange",
+    function() {
+
+        if (
+            !document.fullscreenElement
+        ) {
+
+            document.body
+                .classList
+                .remove(
+                    "fullscreen"
+                );
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   啟動
+========================================= */
+
+updateDate();
+
+displayData();
+
+
+/* 每分鐘更新日期 */
+
+setInterval(
+    updateDate,
+    60000
+);
+
+</script>
+
+
+</body>
+
+</html>
